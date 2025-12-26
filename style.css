@@ -1,0 +1,39 @@
+:root { --max: 980px; }
+* { box-sizing: border-box; }
+body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background: #fafafa; color: #111; }
+#app { padding: 28px; display: flex; justify-content: center; }
+.card {
+  width: min(var(--max), 100%);
+  background: white;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.06);
+}
+.card.wide { --max: 1120px; }
+h1,h2 { margin: 0 0 10px 0; }
+p { margin: 8px 0; }
+.small { color: #555; font-size: 14px; line-height: 1.4; }
+.passage { margin: 14px 0; font-size: 18px; line-height: 1.55; white-space: pre-wrap; }
+.passage.smallpass { font-size: 14px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.pill { font-size: 12px; padding: 6px 10px; border-radius: 999px; background: #f2f2f2; white-space: nowrap; }
+.frame { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; padding: 10px 12px; background: #f7f7f7; border-radius: 12px; }
+.grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+.scale { display: grid; gap: 6px; padding: 10px 12px; background: #fbfbfb; border-radius: 12px; border: 1px solid #eee; }
+.scale .labels { display: flex; justify-content: space-between; font-size: 12px; color: #666; }
+.scale input[type="range"] { width: 100%; }
+.btnrow { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+.btn {
+  padding: 10px 12px; border-radius: 12px; border: 0; background: #111; color: #fff;
+  cursor: pointer; font-weight: 700;
+}
+textarea { width: 100%; min-height: 100px; }
+label { display: grid; gap: 6px; margin: 10px 0; }
+select, input[type="text"], input[type="number"] { padding: 9px 10px; border-radius: 12px; border: 1px solid #ddd; }
+hr { border: 0; border-top: 1px solid #eee; margin: 14px 0; }
+.triptych { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 12px; }
+@media (min-width: 900px) { .triptych { grid-template-columns: 1fr 1fr 1fr; } }
+.panel { background: #fbfbfb; border-radius: 14px; padding: 12px; border: 1px solid #eee; min-height: 220px; }
+.tag { font-size: 12px; color: #666; margin-bottom: 8px; }
+kbd { background: #f0f0f0; border-radius: 6px; padding: 2px 6px; border: 1px solid #e0e0e0; }
+pre { white-space: pre-wrap; background: #f7f7f7; padding: 12px; border-radius: 12px; border: 1px solid #eee; }
