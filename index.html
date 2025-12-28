@@ -1,29 +1,898 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Genre Drift Lab</title>
-
-  <link href="https://cdn.jsdelivr.net/npm/jspsych@7.3.4/css/jspsych.css" rel="stylesheet" type="text/css" />
-  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --accent: #2c5282;
+      --accent-light: #ebf4ff;
+      --text: #1a202c;
+      --muted: #718096;
+      --bg: #f7fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    #experiment {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    .screen {
+      display: none;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 32px 40px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    .screen.active { display: block; }
+    h1 { color: var(--accent); font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 20px; margin-bottom: 20px; }
+    p { margin: 12px 0; }
+    .subtitle { color: var(--muted); font-size: 14px; }
+    .pill {
+      display: inline-block;
+      background: var(--accent-light);
+      color: var(--accent);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .consent-box {
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      max-height: 250px;
+      overflow-y: auto;
+      font-size: 14px;
+    }
+    .consent-box h4 { margin: 16px 0 8px; font-size: 14px; }
+    .consent-box h4:first-child { margin-top: 0; }
+    .consent-box ul { margin-left: 20px; }
+    label.checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 20px 0;
+      cursor: pointer;
+    }
+    label.checkbox input { width: 18px; height: 18px; cursor: pointer; }
+    .form-group {
+      margin: 20px 0;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+    .form-group .required::after {
+      content: " *";
+      color: #e53e3e;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+    .form-group textarea { min-height: 100px; resize: vertical; }
+    .btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #1e3a5f; }
+    .btn:disabled { background: #a0aec0; cursor: not-allowed; }
+    .btn-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    .passage {
+      background: linear-gradient(to right, var(--accent) 3px, #fafafa 3px);
+      padding: 24px 24px 24px 28px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+      font-size: 17px;
+      font-style: italic;
+      line-height: 1.8;
+    }
+    .metadata-frame {
+      display: flex;
+      gap: 24px;
+      background: var(--accent-light);
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--accent);
+    }
+    .slider-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+    .slider-item {
+      background: #fafafa;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .slider-item .title {
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .slider-item .labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .slider-item input[type="range"] {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #cbd5e0;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .slider-item input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .slider-item select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .triptych {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin: 20px 0;
+    }
+    @media (min-width: 800px) {
+      .triptych { grid-template-columns: 1fr 1fr 1fr; }
+    }
+    .triptych-panel {
+      background: #fafafa;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      min-height: 200px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .triptych-panel.target {
+      border-left: 4px solid var(--accent);
+    }
+    .triptych-panel .tag {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .triptych-panel .text {
+      font-size: 14px;
+      font-style: italic;
+      line-height: 1.6;
+    }
+    kbd {
+      background: var(--accent-light);
+      border: 1px solid #bee3f8;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--accent);
+    }
+    .key-hint {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 4px;
+      background: var(--accent);
+      transition: width 0.3s ease;
+      z-index: 1000;
+    }
+    .error-text {
+      color: #e53e3e;
+      font-size: 13px;
+      margin-top: 4px;
+      display: none;
+    }
+    .instructions-box {
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin: 20px 0;
+    }
+    .instructions-box ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .instructions-box li {
+      margin: 10px 0;
+    }
+    .thank-you {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .thank-you h1 {
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+  </style>
 </head>
-
 <body>
-  <div id="app">
-    <div class="card">
-      <h1>Loading...</h1>
-      <p class="small">If this persists, please refresh the page.</p>
+
+<div class="progress-bar" id="progressBar" style="width: 0%"></div>
+
+<div id="experiment">
+  
+  <!-- SCREEN 0: CONSENT -->
+  <div class="screen active" id="screen-consent">
+    <div class="header">
+      <div>
+        <h1>Genre Drift Lab</h1>
+        <p class="subtitle">Computational Cognitive Science Study</p>
+      </div>
+      <span class="pill">~12-15 min</span>
+    </div>
+    
+    <div class="consent-box">
+      <h4>Purpose</h4>
+      <p>This study investigates how readers perceive and categorize literary genres based on textual features.</p>
+      
+      <h4>What You Will Do</h4>
+      <ul>
+        <li>Read short passages from historical texts</li>
+        <li>Rate passages on several stylistic dimensions using sliders</li>
+        <li>Compare passages and judge their similarity</li>
+      </ul>
+      
+      <h4>Participation</h4>
+      <p>Your participation is voluntary. You may withdraw at any time without penalty. All responses are anonymous and will be used for academic research only.</p>
+      
+      <h4>Data Protection</h4>
+      <p>No personally identifying information is collected beyond your Prolific ID for payment purposes.</p>
+    </div>
+    
+    <label class="checkbox">
+      <input type="checkbox" id="consentCheck">
+      <span>I have read the above information and consent to participate in this study.</span>
+    </label>
+    
+    <div class="btn-row">
+      <button class="btn" id="consentBtn" disabled>Begin Study</button>
     </div>
   </div>
-
-  <!-- Load jsPsych and plugins first -->
-  <script src="https://cdn.jsdelivr.net/npm/jspsych@7.3.4/dist/jspsych.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@jspsych/plugin-html-keyboard-response@1.1.3/dist/index.browser.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@jspsych/plugin-survey-html-form@1.0.3/dist/index.browser.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@jspsych/plugin-call-function@1.1.3/dist/index.browser.min.js"></script>
   
-  <!-- Load experiment AFTER all dependencies -->
-  <script src="experiment.js"></script>
+  <!-- SCREEN 1: DEMOGRAPHICS -->
+  <div class="screen" id="screen-demographics">
+    <h2>Background Information</h2>
+    <p class="subtitle">Please answer all questions to continue.</p>
+    
+    <div class="form-group">
+      <label class="required">Age range</label>
+      <select id="demo-age" required>
+        <option value="">Select...</option>
+        <option value="18-24">18-24</option>
+        <option value="25-34">25-34</option>
+        <option value="35-44">35-44</option>
+        <option value="45-54">45-54</option>
+        <option value="55-64">55-64</option>
+        <option value="65+">65+</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label class="required">First language</label>
+      <input type="text" id="demo-language" placeholder="e.g., English" required>
+    </div>
+    
+    <div class="form-group">
+      <label class="required">Country of residence</label>
+      <input type="text" id="demo-country" placeholder="e.g., United Kingdom" required>
+    </div>
+    
+    <div class="form-group">
+      <label class="required">How often do you read fiction?</label>
+      <select id="demo-reading" required>
+        <option value="">Select...</option>
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+        <option value="rarely">Rarely or never</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label class="required">Self-rated familiarity with literary genres (0 = none, 10 = expert)</label>
+      <input type="number" id="demo-familiarity" min="0" max="10" placeholder="0-10" required>
+    </div>
+    
+    <div class="btn-row">
+      <button class="btn" id="demoBtn">Continue</button>
+    </div>
+  </div>
+  
+  <!-- SCREEN 2: INSTRUCTIONS -->
+  <div class="screen" id="screen-instructions">
+    <h2>Instructions</h2>
+    
+    <div class="instructions-box">
+      <ol>
+        <li><strong>Slider Ratings:</strong> You will read short literary passages and rate them on four stylistic dimensions using sliders. You'll also indicate your confidence and select a genre label.</li>
+        <li><strong>Similarity Judgments:</strong> You will see a target passage and two options. Press <kbd>1</kbd> or <kbd>2</kbd> to indicate which option is more similar in genre/style to the target.</li>
+      </ol>
+    </div>
+    
+    <p>There are no right or wrong answers—we are interested in your intuitive judgments about literary style and genre.</p>
+    
+    <div class="btn-row">
+      <button class="btn" id="instrBtn">Begin Trials</button>
+    </div>
+  </div>
+  
+  <!-- SCREEN 3: SLIDER TRIAL (reused) -->
+  <div class="screen" id="screen-slider">
+    <div class="header">
+      <h2>Rate this passage</h2>
+      <span class="pill" id="slider-phase">Phase 1</span>
+    </div>
+    
+    <div class="metadata-frame" id="metadata-frame" style="display: none;">
+      <div><strong>Year:</strong> <span id="meta-year"></span></div>
+      <div><strong>Region:</strong> <span id="meta-region"></span></div>
+      <div id="meta-market-container"><strong>Market:</strong> <span id="meta-market"></span></div>
+    </div>
+    
+    <div class="passage" id="slider-passage"></div>
+    
+    <div class="slider-grid">
+      <div class="slider-item">
+        <div class="title">Literary ↔ Popular</div>
+        <div class="labels"><span>Literary</span><span>Popular</span></div>
+        <input type="range" id="s-lit-pop" min="0" max="100" value="50">
+      </div>
+      <div class="slider-item">
+        <div class="title">Realism ↔ Speculation</div>
+        <div class="labels"><span>Realism</span><span>Speculation</span></div>
+        <input type="range" id="s-real-spec" min="0" max="100" value="50">
+      </div>
+      <div class="slider-item">
+        <div class="title">Romance ↔ Anti-romance</div>
+        <div class="labels"><span>Romance</span><span>Anti-romance</span></div>
+        <input type="range" id="s-rom-anti" min="0" max="100" value="50">
+      </div>
+      <div class="slider-item">
+        <div class="title">Interiority ↔ Action</div>
+        <div class="labels"><span>Interiority</span><span>Action</span></div>
+        <input type="range" id="s-int-act" min="0" max="100" value="50">
+      </div>
+      <div class="slider-item">
+        <div class="title">Your confidence</div>
+        <div class="labels"><span>Low</span><span>High</span></div>
+        <input type="range" id="s-confidence" min="0" max="100" value="50">
+      </div>
+      <div class="slider-item">
+        <div class="title">Closest shelf label</div>
+        <select id="s-shelf">
+          <option value="">Select...</option>
+          <option value="Literary fiction">Literary fiction</option>
+          <option value="Romance">Romance</option>
+          <option value="Crime/Mystery">Crime/Mystery</option>
+          <option value="Speculative/SF">Speculative/SF</option>
+          <option value="Adventure">Adventure</option>
+          <option value="Gothic/Horror">Gothic/Horror</option>
+          <option value="Historical">Historical</option>
+          <option value="Other">Other/Mixed</option>
+        </select>
+        <div class="error-text" id="shelf-error">Please select a shelf label</div>
+      </div>
+    </div>
+    
+    <div class="btn-row">
+      <button class="btn" id="sliderBtn">Continue</button>
+    </div>
+  </div>
+  
+  <!-- SCREEN 4: SIMILARITY TRIAL -->
+  <div class="screen" id="screen-similarity">
+    <div class="header">
+      <h2>Similarity Judgment</h2>
+      <span class="pill">Press 1 or 2</span>
+    </div>
+    
+    <p>Which passage is <strong>more similar</strong> to the target in terms of genre and style?</p>
+    
+    <div class="triptych">
+      <div class="triptych-panel target">
+        <div class="tag">Target Passage</div>
+        <div class="text" id="sim-target"></div>
+      </div>
+      <div class="triptych-panel">
+        <div class="tag">Option 1 — Press <kbd>1</kbd></div>
+        <div class="text" id="sim-option1"></div>
+      </div>
+      <div class="triptych-panel">
+        <div class="tag">Option 2 — Press <kbd>2</kbd></div>
+        <div class="text" id="sim-option2"></div>
+      </div>
+    </div>
+    
+    <div class="key-hint">Press <kbd>1</kbd> for Option 1 or <kbd>2</kbd> for Option 2</div>
+  </div>
+  
+  <!-- SCREEN 5: DEBRIEF -->
+  <div class="screen" id="screen-debrief">
+    <h2>Final Questions</h2>
+    <p class="subtitle">Please reflect on your experience.</p>
+    
+    <div class="form-group">
+      <label class="required">What textual cues or features did you rely on most when making your judgments?</label>
+      <textarea id="debrief-cues" required placeholder="Describe the features that influenced your ratings..."></textarea>
+    </div>
+    
+    <div class="form-group">
+      <label class="required">If you saw metadata (year, region, etc.), did it influence your judgments? How?</label>
+      <textarea id="debrief-frame" required placeholder="Describe any influence of the metadata..."></textarea>
+    </div>
+    
+    <div class="form-group">
+      <label>Any additional comments? (optional)</label>
+      <textarea id="debrief-comments" placeholder="Optional feedback..."></textarea>
+    </div>
+    
+    <div class="btn-row">
+      <button class="btn" id="debriefBtn">Submit</button>
+    </div>
+  </div>
+  
+  <!-- SCREEN 6: THANK YOU -->
+  <div class="screen" id="screen-thankyou">
+    <div class="thank-you">
+      <h1>Thank You!</h1>
+      <p>Your responses have been recorded successfully.</p>
+      <p>You will be redirected to Prolific in a few seconds...</p>
+      <div class="btn-row" style="justify-content: center; border: none; padding-top: 24px;">
+        <a class="btn" id="prolificLink" href="#">Return to Prolific</a>
+      </div>
+    </div>
+  </div>
+  
+</div>
+
+<script>
+(function() {
+  // ============================================
+  // CONFIGURATION - EDIT THESE VALUES
+  // ============================================
+  
+  var SHEETS_WEBAPP_URL = "PASTE_YOUR_GOOGLE_SHEETS_WEBAPP_URL_HERE";
+  var PROLIFIC_COMPLETION_URL = "https://app.prolific.com/submissions/complete?cc=XXXXXXXX";
+  
+  // ============================================
+  // PROLIFIC PARAMETERS
+  // ============================================
+  
+  var urlParams = new URLSearchParams(window.location.search);
+  var PROLIFIC_PID = urlParams.get("PROLIFIC_PID") || "test_" + Date.now();
+  var STUDY_ID = urlParams.get("STUDY_ID") || "test";
+  var SESSION_ID = urlParams.get("SESSION_ID") || "test";
+  
+  // ============================================
+  // PASSAGE DATA
+  // ============================================
+  
+  var PASSAGES = [
+    {id:"p001",year:1895,region:"UK",market:"Sensation",text:"It was near midnight when the telegram arrived, and the house had already begun to settle into its habitual silence."},
+    {id:"p002",year:1911,region:"US",market:"Adventure",text:"The river turned sharply, and the current took the boat as if it had a will of its own, indifferent to our shouting."},
+    {id:"p003",year:1820,region:"FR",market:"Romance",text:"She read the letter twice, slowly, as though the second time might alter the meaning that bruised her pride."},
+    {id:"p004",year:1922,region:"IE",market:"Literary",text:"A thought—thin as a thread—ran through the day's noise and tied itself to the next, refusing to break."},
+    {id:"p005",year:1870,region:"UK",market:"Realist",text:"The clerk's hands were clean, his cuffs precise, and yet the air about him carried the fatigue of small accounts."},
+    {id:"p006",year:1905,region:"US",market:"Pulp",text:"He kicked open the door, and the room answered with gun-smoke and laughter, both equally cheap."},
+    {id:"p007",year:1797,region:"UK",market:"Gothic",text:"The corridor narrowed into shadow; the candle's light trembled, as if it feared what waited beyond the arch."},
+    {id:"p008",year:1930,region:"US",market:"Speculative",text:"When the machine spoke, it did not sound like metal; it sounded like a patient, careful teacher correcting a mistake."},
+    {id:"p009",year:1884,region:"UK",market:"Crime",text:"The evidence was ordinary—mud, a button, a delay—until you saw how neatly it assembled into intention."},
+    {id:"p010",year:1813,region:"UK",market:"Domestic",text:"At tea, the conversation turned, as it always did, to money—never named, always present, like a second tablecloth."},
+    {id:"p011",year:1847,region:"UK",market:"Romance",text:"He offered no explanation, only a look that asked to be believed, and she found herself believing too easily."},
+    {id:"p012",year:1890,region:"UK",market:"Detective",text:"The inspector listened as though the words were less important than the pauses between them."},
+    {id:"p013",year:1868,region:"RU",market:"Realist",text:"He walked the same street daily, and each day it taught him a new way to be ashamed of the same life."},
+    {id:"p014",year:1926,region:"US",market:"Modernist",text:"The sentence began again in his mind, not to conclude, but to circle what could not be said directly."},
+    {id:"p015",year:1799,region:"DE",market:"Gothic",text:"A wind pressed at the shutters with insistence, like a visitor certain of its welcome."},
+    {id:"p016",year:1900,region:"UK",market:"Imperial",text:"Maps made the world look obedient, but the heat on the ground refused those tidy borders."},
+    {id:"p017",year:1851,region:"US",market:"Adventure",text:"The sea offered no counsel; it only repeated its arguments, wave after wave, until we agreed by exhaustion."},
+    {id:"p018",year:1888,region:"US",market:"Domestic",text:"She arranged the room with care, as if order could persuade the day to behave."},
+    {id:"p019",year:1918,region:"UK",market:"War",text:"The letter was brief; the grief was not. The news arrived in formal phrases that did not know his voice."},
+    {id:"p020",year:1838,region:"UK",market:"Social",text:"The crowd admired virtue in public and punished it in private, with the same steady enthusiasm."}
+  ];
+  
+  // ============================================
+  // EXPERIMENT STATE
+  // ============================================
+  
+  var uid = "p_" + Math.random().toString(36).substr(2, 9) + "_" + Date.now();
+  var arms = ["text_only", "light_metadata", "market_frame"];
+  var arm = arms[Math.floor(Math.random() * arms.length)];
+  var startTime = new Date().toISOString();
+  
+  var data = {
+    uid: uid,
+    arm: arm,
+    prolific_pid: PROLIFIC_PID,
+    study_id: STUDY_ID,
+    session_id: SESSION_ID,
+    start_time: startTime,
+    demographics: {},
+    slider_trials: [],
+    similarity_trials: [],
+    debrief: {}
+  };
+  
+  // Shuffle passages
+  var shuffled = PASSAGES.slice().sort(function() { return Math.random() - 0.5; });
+  var mainPassages = shuffled.slice(0, 8);
+  var simPool = shuffled.slice(8, 20);
+  var repeatPassages = mainPassages.slice(0, 4);
+  
+  // Trial counters
+  var currentSliderTrial = 0;
+  var currentSimTrial = 0;
+  var phase = "main"; // "main" or "repeat"
+  var totalTrials = 8 + 12 + 4; // 8 main sliders + 12 similarity + 4 repeat sliders
+  var completedTrials = 0;
+  
+  // Similarity trial data
+  var simTrials = [];
+  for (var i = 0; i < 12; i++) {
+    var target = simPool[i % simPool.length];
+    var others = simPool.filter(function(p) { return p.id !== target.id; });
+    var shuffledOthers = others.sort(function() { return Math.random() - 0.5; });
+    simTrials.push({
+      target: target,
+      option1: shuffledOthers[0],
+      option2: shuffledOthers[1]
+    });
+  }
+  
+  // ============================================
+  // UTILITY FUNCTIONS
+  // ============================================
+  
+  function updateProgress() {
+    var progress = (completedTrials / totalTrials) * 100;
+    document.getElementById("progressBar").style.width = progress + "%";
+  }
+  
+  function showScreen(id) {
+    var screens = document.querySelectorAll(".screen");
+    for (var i = 0; i < screens.length; i++) {
+      screens[i].classList.remove("active");
+    }
+    document.getElementById(id).classList.add("active");
+    window.scrollTo(0, 0);
+  }
+  
+  function postToSheet(payload) {
+    if (!SHEETS_WEBAPP_URL || SHEETS_WEBAPP_URL.indexOf("PASTE_") !== -1) {
+      console.log("Data (Sheet not configured):", payload);
+      return Promise.resolve({ ok: true, skipped: true });
+    }
+    return fetch(SHEETS_WEBAPP_URL, {
+      method: "POST",
+      mode: "cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).then(function(res) {
+      return res.json();
+    }).catch(function(err) {
+      console.error("Sheet error:", err);
+      return { ok: false, error: err.message };
+    });
+  }
+  
+  // ============================================
+  // SCREEN HANDLERS
+  // ============================================
+  
+  // CONSENT
+  var consentCheck = document.getElementById("consentCheck");
+  var consentBtn = document.getElementById("consentBtn");
+  
+  consentCheck.addEventListener("change", function() {
+    consentBtn.disabled = !consentCheck.checked;
+  });
+  
+  consentBtn.addEventListener("click", function() {
+    data.consent_time = new Date().toISOString();
+    showScreen("screen-demographics");
+  });
+  
+  // DEMOGRAPHICS
+  var demoBtn = document.getElementById("demoBtn");
+  
+  demoBtn.addEventListener("click", function() {
+    var age = document.getElementById("demo-age").value;
+    var language = document.getElementById("demo-language").value.trim();
+    var country = document.getElementById("demo-country").value.trim();
+    var reading = document.getElementById("demo-reading").value;
+    var familiarity = document.getElementById("demo-familiarity").value;
+    
+    if (!age || !language || !country || !reading || familiarity === "") {
+      alert("Please complete all fields.");
+      return;
+    }
+    
+    var fam = parseInt(familiarity);
+    if (isNaN(fam) || fam < 0 || fam > 10) {
+      alert("Genre familiarity must be between 0 and 10.");
+      return;
+    }
+    
+    data.demographics = {
+      age_band: age,
+      first_language: language,
+      country: country,
+      reading_freq: reading,
+      genre_familiarity: fam
+    };
+    
+    showScreen("screen-instructions");
+  });
+  
+  // INSTRUCTIONS
+  document.getElementById("instrBtn").addEventListener("click", function() {
+    showSliderTrial();
+  });
+  
+  // SLIDER TRIAL
+  function showSliderTrial() {
+    var passage;
+    var showMeta = false;
+    
+    if (phase === "main") {
+      passage = mainPassages[currentSliderTrial];
+      document.getElementById("slider-phase").textContent = "Phase 1 — Trial " + (currentSliderTrial + 1) + "/8";
+    } else {
+      passage = repeatPassages[currentSliderTrial];
+      showMeta = (arm !== "text_only");
+      document.getElementById("slider-phase").textContent = "Phase 3 — Trial " + (currentSliderTrial + 1) + "/4";
+    }
+    
+    document.getElementById("slider-passage").textContent = passage.text;
+    
+    // Metadata
+    var metaFrame = document.getElementById("metadata-frame");
+    if (showMeta) {
+      document.getElementById("meta-year").textContent = passage.year;
+      document.getElementById("meta-region").textContent = passage.region;
+      if (arm === "market_frame") {
+        document.getElementById("meta-market").textContent = passage.market;
+        document.getElementById("meta-market-container").style.display = "block";
+      } else {
+        document.getElementById("meta-market-container").style.display = "none";
+      }
+      metaFrame.style.display = "flex";
+    } else {
+      metaFrame.style.display = "none";
+    }
+    
+    // Reset sliders
+    document.getElementById("s-lit-pop").value = 50;
+    document.getElementById("s-real-spec").value = 50;
+    document.getElementById("s-rom-anti").value = 50;
+    document.getElementById("s-int-act").value = 50;
+    document.getElementById("s-confidence").value = 50;
+    document.getElementById("s-shelf").value = "";
+    document.getElementById("shelf-error").style.display = "none";
+    
+    showScreen("screen-slider");
+  }
+  
+  document.getElementById("sliderBtn").addEventListener("click", function() {
+    var shelf = document.getElementById("s-shelf").value;
+    if (!shelf) {
+      document.getElementById("shelf-error").style.display = "block";
+      return;
+    }
+    
+    var passage = (phase === "main") ? mainPassages[currentSliderTrial] : repeatPassages[currentSliderTrial];
+    
+    var trialData = {
+      phase: phase,
+      trial_index: currentSliderTrial,
+      passage_id: passage.id,
+      year: passage.year,
+      region: passage.region,
+      market: passage.market,
+      with_metadata: (phase === "repeat" && arm !== "text_only"),
+      s_lit_pop: parseInt(document.getElementById("s-lit-pop").value),
+      s_real_spec: parseInt(document.getElementById("s-real-spec").value),
+      s_rom_anti: parseInt(document.getElementById("s-rom-anti").value),
+      s_int_act: parseInt(document.getElementById("s-int-act").value),
+      confidence: parseInt(document.getElementById("s-confidence").value),
+      shelf_label: shelf,
+      timestamp: new Date().toISOString()
+    };
+    
+    data.slider_trials.push(trialData);
+    completedTrials++;
+    updateProgress();
+    
+    currentSliderTrial++;
+    
+    if (phase === "main" && currentSliderTrial >= mainPassages.length) {
+      // Move to similarity trials
+      currentSimTrial = 0;
+      showSimilarityTrial();
+    } else if (phase === "repeat" && currentSliderTrial >= repeatPassages.length) {
+      // Move to debrief
+      showScreen("screen-debrief");
+    } else {
+      showSliderTrial();
+    }
+  });
+  
+  // SIMILARITY TRIAL
+  function showSimilarityTrial() {
+    var trial = simTrials[currentSimTrial];
+    
+    document.getElementById("sim-target").textContent = trial.target.text;
+    document.getElementById("sim-option1").textContent = trial.option1.text;
+    document.getElementById("sim-option2").textContent = trial.option2.text;
+    
+    showScreen("screen-similarity");
+  }
+  
+  function handleSimilarityResponse(choice) {
+    var trial = simTrials[currentSimTrial];
+    
+    var trialData = {
+      trial_index: currentSimTrial,
+      target_id: trial.target.id,
+      option1_id: trial.option1.id,
+      option2_id: trial.option2.id,
+      choice: choice,
+      chosen_id: (choice === 1) ? trial.option1.id : trial.option2.id,
+      timestamp: new Date().toISOString()
+    };
+    
+    data.similarity_trials.push(trialData);
+    completedTrials++;
+    updateProgress();
+    
+    currentSimTrial++;
+    
+    if (currentSimTrial >= simTrials.length) {
+      // Move to repeat phase
+      phase = "repeat";
+      currentSliderTrial = 0;
+      showSliderTrial();
+    } else {
+      showSimilarityTrial();
+    }
+  }
+  
+  // Keyboard handler for similarity
+  document.addEventListener("keydown", function(e) {
+    if (document.getElementById("screen-similarity").classList.contains("active")) {
+      if (e.key === "1") {
+        handleSimilarityResponse(1);
+      } else if (e.key === "2") {
+        handleSimilarityResponse(2);
+      }
+    }
+  });
+  
+  // DEBRIEF
+  document.getElementById("debriefBtn").addEventListener("click", function() {
+    var cues = document.getElementById("debrief-cues").value.trim();
+    var frame = document.getElementById("debrief-frame").value.trim();
+    var comments = document.getElementById("debrief-comments").value.trim();
+    
+    if (!cues || !frame) {
+      alert("Please answer the required questions.");
+      return;
+    }
+    
+    data.debrief = {
+      cues: cues,
+      frame_effect: frame,
+      comments: comments
+    };
+    
+    data.end_time = new Date().toISOString();
+    
+    // Send data
+    postToSheet({
+      event: "COMPLETE",
+      timestamp: data.end_time,
+      data: data
+    }).then(function() {
+      // Set prolific link
+      document.getElementById("prolificLink").href = PROLIFIC_COMPLETION_URL;
+      showScreen("screen-thankyou");
+      
+      // Auto redirect after 3 seconds
+      if (PROLIFIC_COMPLETION_URL.indexOf("XXXXXXXX") === -1) {
+        setTimeout(function() {
+          window.location.href = PROLIFIC_COMPLETION_URL;
+        }, 3000);
+      }
+    });
+  });
+  
+  // ============================================
+  // INITIALIZE
+  // ============================================
+  
+  console.log("Genre Drift Lab initialized");
+  console.log("Participant:", uid);
+  console.log("Arm:", arm);
+  console.log("Prolific PID:", PROLIFIC_PID);
+  
+})();
+</script>
+
 </body>
 </html>
